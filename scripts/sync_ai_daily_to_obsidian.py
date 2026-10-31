@@ -46,9 +46,10 @@ def main() -> int:
         GENERIC = {
             "今日速览", "速览", "今日 5 条", "今日5条", "今日 5 条 ", "目录", "摘要",
             "附注", "信息来源", "筛选原则", "今日话题", "数据速览", "今日焦点",
-            "其他值得记录", "其他动态",
+            "其他值得记录", "其他动态", "今日主条", "主条", "今日要闻", "正文",
+            "事实核查", "去重说明", "明日关注", "口径提醒", "核心结论",
         }
-        first_item = ""
+        cands = []
         for ln in lines:
             m2 = re.match(r"^#{2,3}\s+(?:\d+[.、)]\s*)?(.+?)\s*$", ln)
             if not m2:
@@ -59,8 +60,11 @@ def main() -> int:
             # 跳过「一、今日要点」这类层级小节标题（取真正的第一条主选题）
             if re.match(r"^[一二三四五六七八九十]+[、.．]", cand) or "要点" in cand:
                 continue
-            first_item = cand
-            break
+            cands.append(cand)
+        # 优先取带圈序号（①②③）的标题，避免把「今日主条」这类分节名当摘要
+        first_item = next((c for c in cands if any(ch in c for ch in "①②③④⑤")), "")
+        if not first_item:
+            first_item = cands[0] if cands else ""
 
         if not text.startswith("---\n"):
             fm = (
